@@ -1,0 +1,88 @@
+/*
+ * Copyright (c) 2013, Marc Lebrun <marc.lebrun.ik@gmail.com>
+ * All rights reserved.
+ *
+ * This program is free software: you can use, modify and/or
+ * redistribute it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation, either
+ * version 3 of the License, or (at your option) any later
+ * version. You should have received a copy of this license along
+ * this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+#ifndef UTILITIES_H_INCLUDED
+#define UTILITIES_H_INCLUDED
+
+#include <vector>
+#include "LibImages.h"
+
+/**
+ * @brief Convenient function to use the sort function provided by the vector library.
+ **/
+bool comparisonFirst(
+	const std::pair<float, unsigned> &i_pair1, const std::pair<float, unsigned> &i_pair2
+);
+
+/**
+ * @brief Clip a value between min and max
+ *
+ * @param i_value: value to clip;
+ * @param i_min: minimum value;
+ * @param i_max: maximum value.
+ *
+ * @return value clipped between [min, max].
+ **/
+float clip(
+	const float i_value
+,	const float i_min
+,	const float i_max
+);
+
+/**
+ * @brief Obtain and substract the baricenter of io_group3d.
+ *
+ * @param io_group3d(p_rows x p_cols) : data to center;
+ * @param o_baricenter(p_cols): will contain the baricenter of io_group3d;
+ * @param p_rows, p_cols: size of io_group3d.
+ *
+ * @return none.
+ **/
+void centerData(
+	std::vector<float> &io_group3d
+,	std::vector<float> &o_baricenter
+,	const unsigned p_rows
+,	const unsigned p_cols
+);
+
+/**
+ * @brief Compute the average standard deviation of a set of patches.
+ *
+ * @param i_Set(p_sP, p_nSimP): set of patches;
+ * @param p_sP : size of a patch;
+ * @param p_nSimP: number of patches in the set;
+ * @param p_nChannels: number of channels of the image.
+ *
+ * @return the average standard deviation of the set
+ **/
+float computeStdDeviation(
+	std::vector<float> const& i_Set
+,	const unsigned p_sP
+,	const unsigned p_nSimP
+,	const unsigned p_nChannels
+);
+
+/**
+ * @brief Determine a and b such that : n = a * b, with a and b as greatest as possible
+ *
+ * @param i_n : number to decompose;
+ * @param o_a : will contain a;
+ * @param o_b : will contain b.
+ *
+ * @return none.
+ **/
+void determineFactor(
+    const unsigned i_n
+,   unsigned &o_a
+,   unsigned &o_b
+);
+
+#endif // UTILITIES_H_INCLUDED
