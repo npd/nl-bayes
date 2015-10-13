@@ -47,17 +47,17 @@ int loadImage(const char *p_name,
 ) {
   //! read input image
   if (p_verbose) {
-    cout << endl << "Read input image...";
+    cerr << endl << "Read input image...";
   }
   float *imTmp = NULL;
   int w, h, c;
   imTmp = iio_read_image_float_split(p_name, &w, &h, &c);
   if (!imTmp) {
-    cout << "error :: " << p_name << " not found or not a correct image" << endl;
+    cerr << "error :: " << p_name << " not found or not a correct image" << endl;
     return EXIT_FAILURE;
   }
   if (p_verbose) {
-    cout << "done." << endl;
+    cerr << "done." << endl;
   }
 
   //! test if image is really a color image and exclude the alpha channel
@@ -71,10 +71,10 @@ int loadImage(const char *p_name,
 
   //! Some image informations
   if (p_verbose) {
-    cout << "image size :" << endl;
-    cout << " - width          = " << w << endl;
-    cout << " - height         = " << h << endl;
-    cout << " - nb of channels = " << c << endl;
+    cerr << "image size :" << endl;
+    cerr << " - width          = " << w << endl;
+    cerr << " - height         = " << h << endl;
+    cerr << " - nb of channels = " << c << endl;
   }
 
   //! Initializations
@@ -147,7 +147,7 @@ int addBoundary(
   const unsigned w = p_imSizeSym.width;
 
   if (w < width || h < height) {
-    cout << "o_imSym must be greater than i_im!!!" << endl;
+    cerr << "o_imSym must be greater than i_im!!!" << endl;
     return EXIT_FAILURE;
   }
 
@@ -209,7 +209,7 @@ int removeBoundary(
   const unsigned w = p_imSizeSym.width;
 
   if (w < width || h < height) {
-    cout << "i_imSym must be greater than o_im!!!" << endl;
+    cerr << "i_imSym must be greater than o_im!!!" << endl;
     return EXIT_FAILURE;
   }
 

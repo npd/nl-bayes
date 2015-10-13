@@ -48,7 +48,7 @@ const char *pick_option(int *c, char **v, const char *o, const char *d) {
 int main(int argc, char **argv) {
   //! Check if there is the right call for the algorithm
   if (argc < 4) {
-    cout << "usage: " << argv[0] << " input sigma output [-v] [-1 | -2 guide]" << endl;
+    cerr << "usage: " << argv[0] << " input sigma output [-v] [-1 | -2 guide]" << endl;
     return EXIT_FAILURE;
   }
 
@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
   const bool no_first_step = second_step_guide[0] != '\0';
 
   if (no_second_step && no_first_step) {
-    cout << "You can't use -1 and -2 together." << endl;
+    cerr << "You can't use -1 and -2 together." << endl;
     return EXIT_FAILURE;
   }
 
@@ -81,26 +81,26 @@ int main(int argc, char **argv) {
     if ((imBasicSize.height    != imSize.height) ||
         (imBasicSize.width     != imSize.width) ||
         (imBasicSize.nChannels != imSize.nChannels)) {
-      cout << "The image and the guide should have the same size." << endl;
+      cerr << "The image and the guide should have the same size." << endl;
       return EXIT_FAILURE;
     }
   }
 
   //! Denoising
   if (verbose) {
-    cout << endl << "Applying NL-Bayes to the noisy image :" << endl;
+    cerr << endl << "Applying NL-Bayes to the noisy image :" << endl;
   }
   if (runNlBayes(imNoisy, imBasic, imFinal, imSize, sigma, verbose, no_first_step, no_second_step)
       != EXIT_SUCCESS) {
     return EXIT_FAILURE;
   }
   if (verbose) {
-    cout << endl;
+    cerr << endl;
   }
 
   //! save denoised image
   if (verbose) {
-    cout << "Save image...";
+    cerr << "Save image...";
   }
   if (no_second_step) {
     if (saveImage(argv[3], imBasic, imSize, 0.f, 255.f) != EXIT_SUCCESS) {
@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
     }
   }
   if (verbose) {
-    cout << "done." << endl;
+    cerr << "done." << endl;
   }
 
   return EXIT_SUCCESS;

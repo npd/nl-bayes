@@ -196,7 +196,7 @@ int runNlBayes(std::vector<float> const &i_imNoisy,
   //! Only 1, 3 or 4-channels images can be processed.
   const unsigned chnls = p_imSize.nChannels;
   if (!(chnls == 1 || chnls == 3 || chnls == 4)) {
-    cout << "Wrong number of channels. Must be 1 or 3!!" << endl;
+    cerr << "Wrong number of channels. Must be 1 or 3!!" << endl;
     return EXIT_FAILURE;
   }
 
@@ -205,7 +205,7 @@ int runNlBayes(std::vector<float> const &i_imNoisy,
 #ifdef _OPENMP
   nbThreads = omp_get_max_threads();
   if (p_verbose) {
-    cout << "Open MP is used" << endl;
+    cerr << "Open MP is used" << endl;
   }
 #endif
 
@@ -223,7 +223,7 @@ int runNlBayes(std::vector<float> const &i_imNoisy,
   if (!no_first_step) {
     //! Step 1
     if (paramStep1.verbose) {
-      cout << "1st Step..." << flush;
+      cerr << "1st Step..." << flush;
     }
 
     //! Initialization
@@ -258,14 +258,14 @@ int runNlBayes(std::vector<float> const &i_imNoisy,
     transformColorSpace(o_imBasic, p_imSize, false);
 
     if (paramStep1.verbose) {
-      cout << "done." << endl;
+      cerr << "done." << endl;
     }
   }
 
   if (!no_second_step) {
     //! 2nd Step
     if (paramStep2.verbose) {
-      cout << "2nd Step..." << flush;
+      cerr << "2nd Step..." << flush;
     }
 
     //! Divide the noisy and basic images into sub-images in order to easier parallelize the process
@@ -294,7 +294,7 @@ int runNlBayes(std::vector<float> const &i_imNoisy,
     }
 
     if (paramStep2.verbose) {
-      cout << "done." << endl << endl;
+      cerr << "done." << endl << endl;
     }
   }
 
@@ -414,7 +414,7 @@ void processNlBayes(
   computeWeightedAggregation(i_imNoisy, io_imBasic, o_imFinal, weight, p_params, p_imSize);
 
   if (nInverseFailed > 0 && p_params.verbose) {
-    cout << "nInverseFailed = " << nInverseFailed << endl;
+    cerr << "nInverseFailed = " << nInverseFailed << endl;
   }
 }
 
@@ -718,8 +718,7 @@ void computeBayesEstimateStep1(
       for (unsigned k = 0; k < sP2 * nSimP; k++) {
         io_group3d[c][k] -= valDiag * i_mat.group3dTranspose[k];
       }
-    }
-    else {
+    } else {
       io_nInverseFailed++;
     }
 
