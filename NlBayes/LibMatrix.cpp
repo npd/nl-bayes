@@ -44,7 +44,7 @@ int inverseMatrix(vector<float> &io_mat, const unsigned p_N) {
       io_mat[p] -= io_mat[q] * io_mat[q];
     }
 
-    if (io_mat[p] <= 0.f) {
+    if (io_mat[p] <= 0.05f) {
       return EXIT_FAILURE;
     }
 
