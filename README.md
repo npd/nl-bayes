@@ -49,6 +49,12 @@ To compute just the second step, with `guide.tiff` as guide, use
 
 The option `-v` increases verbosity.
 
+To enable or disable the flat patch trick, use the flags `-flat1` and `-flat2`. For example, to enable it just on the second step, use
+
+    $ nl_bayes noisy.png sigma result.tiff -flat1 0 -flat2 1
+
+The default is `-flat1 1 -flat2 0`.
+
 About this file
 ---------------
 

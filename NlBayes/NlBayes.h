@@ -85,6 +85,8 @@ void initializeNlbParameters(nlbParams &o_paramStep1,
                              nlbParams &o_paramStep2,
                              const float p_sigma,
                              const ImageSize &p_imSize,
+                             const bool flat1,
+                             const bool flat2,
                              const bool p_verbose);
 
 /**
@@ -108,7 +110,9 @@ int runNlBayes(std::vector<float> const &i_imNoisy,
                const float p_sigma,
                const bool p_verbose,
                const bool no_first_step,
-               const bool no_second_step);
+               const bool no_second_step,
+               const bool flat1,
+               const bool flat2);
 
 /**
  * @brief Generic step of the NL-Bayes denoising (could be the first or the second).

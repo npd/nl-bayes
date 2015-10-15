@@ -47,6 +47,8 @@ void initializeNlbParameters(nlbParams &o_paramStep1,
                              nlbParams &o_paramStep2,
                              const float p_sigma,
                              const ImageSize &p_imSize,
+                             const bool flat1,
+                             const bool flat2,
                              const bool p_verbose) {
   //! Standard deviation of the noise
   o_paramStep1.sigma = p_sigma;
@@ -109,8 +111,8 @@ void initializeNlbParameters(nlbParams &o_paramStep1,
   o_paramStep2.offSet = o_paramStep2.sizePatch / 2;
 
   //! Use the homogeneous area detection trick
-  o_paramStep1.useHomogeneousArea = true;
-  o_paramStep2.useHomogeneousArea = false;
+  o_paramStep1.useHomogeneousArea = flat1;
+  o_paramStep2.useHomogeneousArea = flat2;
 
   //! Size of the search window around the reference patch (must be odd)
   o_paramStep1.sizeSearchWindow = o_paramStep1.nSimilarPatches / 2;
@@ -192,7 +194,9 @@ int runNlBayes(std::vector<float> const &i_imNoisy,
                const float p_sigma,
                const bool p_verbose,
                const bool no_first_step,
-               const bool no_second_step) {
+               const bool no_second_step,
+               const bool flat1,
+               const bool flat2) {
   //! Only 1, 3 or 4-channels images can be processed.
   const unsigned chnls = p_imSize.nChannels;
   if (!(chnls == 1 || chnls == 3 || chnls == 4)) {
@@ -214,7 +218,7 @@ int runNlBayes(std::vector<float> const &i_imNoisy,
 
   //! Parameters Initialization
   nlbParams paramStep1, paramStep2;
-  initializeNlbParameters(paramStep1, paramStep2, p_sigma, p_imSize, p_verbose);
+  initializeNlbParameters(paramStep1, paramStep2, p_sigma, p_imSize, flat1, flat2, p_verbose);
 
   const unsigned nbParts = 2 * nbThreads;
   vector<vector<float> > imNoisySub(nbParts), imBasicSub(nbParts), imFinalSub(nbParts);
