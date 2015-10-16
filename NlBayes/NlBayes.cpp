@@ -54,57 +54,15 @@ void initializeNlbParameters(nlbParams &o_paramStep1,
   o_paramStep1.sigma = p_sigma;
   o_paramStep2.sigma = p_sigma;
 
-  //! Size of patches
-  if (p_imSize.nChannels == 1) {
-    if (p_sigma < 30.f) {
-      o_paramStep1.sizePatch = 5;
-    } else {
-      o_paramStep1.sizePatch = 7;
-    }
-    o_paramStep2.sizePatch = 5;
-  }
-  else {
-    if (p_sigma < 20.f) {
-      o_paramStep1.sizePatch = 3;
-    } else if (p_sigma < 50.f) {
-      o_paramStep1.sizePatch = 5;
-    } else {
-      o_paramStep1.sizePatch = 7;
-    }
-    if (p_sigma < 50.f) {
-      o_paramStep2.sizePatch = 3;
-    } else if (p_sigma < 70.f) {
-      o_paramStep2.sizePatch = 5;
-    } else {
-      o_paramStep2.sizePatch = 7;
-    }
-  }
+  o_paramStep1.sizePatch = 5;
+  o_paramStep2.sizePatch = 3;
 
-  //! Number of similar patches
-  if (p_imSize.nChannels == 1) {
-    if (p_sigma < 10.f) {
-      o_paramStep1.nSimilarPatches = 35;
-    } else if (p_sigma < 30.f) {
-      o_paramStep1.nSimilarPatches = 45;
-    } else if (p_sigma < 80.f) {
-      o_paramStep1.nSimilarPatches = 90;
-    } else {
-      o_paramStep1.nSimilarPatches = 100;
-    }
-    if (p_sigma < 20.f) {
-      o_paramStep2.nSimilarPatches = 15;
-    } else if (p_sigma < 40.f) {
-      o_paramStep2.nSimilarPatches = 25;
-    } else if (p_sigma < 80.f) {
-      o_paramStep2.nSimilarPatches = 30;
-    } else {
-      o_paramStep2.nSimilarPatches = 45;
-    }
-  }
-  else {
-    o_paramStep1.nSimilarPatches = o_paramStep1.sizePatch * o_paramStep1.sizePatch * 3;
-    o_paramStep2.nSimilarPatches = o_paramStep2.sizePatch * o_paramStep2.sizePatch * 3;
-  }
+  //! Size of the search window around the reference patch (must be odd)
+  o_paramStep1.sizeSearchWindow = 7 * o_paramStep1.sizePatch;
+  o_paramStep2.sizeSearchWindow = 7 * o_paramStep2.sizePatch;
+
+  o_paramStep1.nSimilarPatches = 15 * (o_paramStep1.sizePatch - 1);
+  o_paramStep2.nSimilarPatches = 15 * (o_paramStep2.sizePatch - 1);
 
   //! Offset: step between two similar patches
   o_paramStep1.offSet = o_paramStep1.sizePatch / 2;
@@ -113,16 +71,6 @@ void initializeNlbParameters(nlbParams &o_paramStep1,
   //! Use the homogeneous area detection trick
   o_paramStep1.useHomogeneousArea = flat1;
   o_paramStep2.useHomogeneousArea = flat2;
-
-  //! Size of the search window around the reference patch (must be odd)
-  o_paramStep1.sizeSearchWindow = o_paramStep1.nSimilarPatches / 2;
-  if (o_paramStep1.sizeSearchWindow % 2 == 0) {
-    o_paramStep1.sizeSearchWindow++;
-  }
-  o_paramStep2.sizeSearchWindow = o_paramStep2.nSimilarPatches / 2;
-  if (o_paramStep2.sizeSearchWindow % 2 == 0) {
-    o_paramStep2.sizeSearchWindow++;
-  }
 
   //! Size of boundaries used during the sub division
   o_paramStep1.boundary = (unsigned int) (1.5f * float(o_paramStep1.sizeSearchWindow));
@@ -133,29 +81,8 @@ void initializeNlbParameters(nlbParams &o_paramStep1,
   o_paramStep2.gamma = 1.05f;
 
   //! Parameter used to estimate the covariance matrix
-  if (p_imSize.nChannels == 1) {
-    if (p_sigma < 15.f) {
-      o_paramStep1.beta = 1.1f;
-    } else if (p_sigma < 70.f) {
-      o_paramStep1.beta = 1.f;
-    } else {
-      o_paramStep1.beta = 0.9f;
-    }
-    if (p_sigma < 15.f) {
-      o_paramStep2.beta = 1.1f;
-    } else if (p_sigma < 35.f) {
-      o_paramStep2.beta = 1.f;
-    } else {
-      o_paramStep2.beta = 0.9f;
-    }
-  } else {
-    o_paramStep1.beta = 1.f;
-    if (p_sigma < 50.f) {
-      o_paramStep2.beta = 1.2f;
-    } else {
-      o_paramStep2.beta = 1.f;
-    }
-  }
+  o_paramStep1.beta = 1.f;
+  o_paramStep2.beta = 1.f;
 
   //! Parameter used to determine similar patches
   o_paramStep2.tau = 16.f * o_paramStep2.sizePatch * o_paramStep2.sizePatch * p_imSize.nChannels;
