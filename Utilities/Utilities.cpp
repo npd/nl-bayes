@@ -50,31 +50,31 @@ float clip(
 }
 
 /**
- * @brief Obtain and substract the baricenter of io_group3d.
+ * @brief Obtain and substract the barycenter of io_group3d.
  *
  * @param io_group3d(p_rows x p_cols) : data to center;
- * @param o_baricenter(p_cols): will contain the baricenter of io_group3d;
+ * @param o_baricenter(p_cols): will contain the barycenter of io_group3d;
  * @param p_rows, p_cols: size of io_group3d.
  *
  * @return none.
  **/
-void centerData(
-    std::vector<float> &io_group3d,
-    std::vector<float> &o_baricenter,
-    const unsigned p_rows,
-    const unsigned p_cols
-) {
+void centerData(std::vector<float> &io_group3d,
+                std::vector<float> &o_barycenter,
+                const unsigned p_rows,
+                const unsigned p_cols,
+                const bool compute_barycenter) {
   const float inv = 1.f / (float) p_rows;
   for (unsigned j = 0; j < p_cols; j++) {
-    float sum = 0.f;
-    for (unsigned i = 0; i < p_rows; i++) {
-      sum += io_group3d[j * p_rows + i];
+    if (compute_barycenter) {
+      float sum = 0.f;
+      for (unsigned i = 0; i < p_rows; i++) {
+        sum += io_group3d[j * p_rows + i];
+      }
+
+      o_barycenter[j] = sum * inv;
     }
-
-    o_baricenter[j] = sum * inv;
-
     for (unsigned i = 0; i < p_rows; i++) {
-      io_group3d[j * p_rows + i] -= o_baricenter[j];
+      io_group3d[j * p_rows + i] -= o_barycenter[j];
     }
   }
 }

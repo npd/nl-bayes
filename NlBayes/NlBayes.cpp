@@ -23,10 +23,13 @@
 
 #include "NlBayes.h"
 #include "LibMatrix.h"
+#include "smapa.h"
 
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+
+SMART_PARAMETER_SILENT(NOISY_BARYCENTER, 0);
 
 using namespace std;
 
@@ -45,11 +48,14 @@ using namespace std;
  **/
 void initializeNlbParameters(nlbParams &o_paramStep1,
                              nlbParams &o_paramStep2,
-                             const float p_sigma,
                              const ImageSize &p_imSize,
+                             const float p_sigma,
+                             const bool p_verbose,
                              const bool flat1,
                              const bool flat2,
-                             const bool p_verbose) {
+                             const bool custom_noise,
+                             const std::vector<float> &noise_model,
+                             const ImageSize &noise_model_size) {
   //! Standard deviation of the noise
   o_paramStep1.sigma = p_sigma;
   o_paramStep2.sigma = p_sigma;
@@ -98,6 +104,33 @@ void initializeNlbParameters(nlbParams &o_paramStep1,
   //! Boost the paste trick
   o_paramStep1.doPasteBoost = true;
   o_paramStep2.doPasteBoost = true;
+
+  if (custom_noise) {
+    o_paramStep1.custom_noise = true;
+    o_paramStep2.custom_noise = true;
+
+    unsigned size1 = o_paramStep1.sizePatch * o_paramStep1.sizePatch;
+    o_paramStep1.noise_model.resize(size1 * size1);
+    for (unsigned i = 0; i < size1; ++i) {
+      for (unsigned j = 0; j < size1; ++j) {
+        o_paramStep1.noise_model[size1 * i + j] = noise_model[noise_model_size.width * i + j];
+      }
+    }
+    unsigned size2 = o_paramStep2.sizePatch * o_paramStep2.sizePatch;
+    unsigned size2c = size2 * p_imSize.nChannels;
+    o_paramStep2.noise_model.resize(size2c * size2c, 0);
+    for (unsigned c = 0; c < p_imSize.nChannels; ++c) {
+      for (unsigned i = 0; i < size2; ++i) {
+        for (unsigned j = 0; j < size2; ++j) {
+          o_paramStep2.noise_model[c * size2 * (size2c + 1) + i * size2c + j] =
+              noise_model[noise_model_size.width * i + j];
+        }
+      }
+    }
+  } else {
+    o_paramStep1.custom_noise = false;
+    o_paramStep2.custom_noise = false;
+  }
 }
 
 /**
@@ -123,7 +156,10 @@ int runNlBayes(std::vector<float> const &i_imNoisy,
                const bool no_first_step,
                const bool no_second_step,
                const bool flat1,
-               const bool flat2) {
+               const bool flat2,
+               const bool custom_noise,
+               const std::vector<float> &noise_model,
+               const ImageSize &noise_model_size) {
   //! Only 1, 3 or 4-channels images can be processed.
   const unsigned chnls = p_imSize.nChannels;
   if (!(chnls == 1 || chnls == 3 || chnls == 4)) {
@@ -145,7 +181,7 @@ int runNlBayes(std::vector<float> const &i_imNoisy,
 
   //! Parameters Initialization
   nlbParams paramStep1, paramStep2;
-  initializeNlbParameters(paramStep1, paramStep2, p_sigma, p_imSize, flat1, flat2, p_verbose);
+  initializeNlbParameters(paramStep1, paramStep2, p_imSize, p_sigma, p_verbose, flat1, flat2, custom_noise, noise_model, noise_model_size);
 
   const unsigned nbParts = 2 * nbThreads;
   vector<vector<float> > imNoisySub(nbParts), imBasicSub(nbParts), imFinalSub(nbParts);
@@ -177,7 +213,11 @@ int runNlBayes(std::vector<float> const &i_imNoisy,
             firstprivate (paramStep1)
 #endif
     for (int n = 0; n < (int) nbParts; n++) {
-      processNlBayes(imNoisySub[n], imBasicSub[n], imFinalSub[n], imSizeSub, paramStep1);
+      processNlBayes(imNoisySub[n],
+                     imBasicSub[n],
+                     imFinalSub[n],
+                     imSizeSub,
+                     paramStep1);
     }
 
     //! Get the basic estimate
@@ -216,7 +256,11 @@ int runNlBayes(std::vector<float> const &i_imNoisy,
             firstprivate (paramStep2)
 #endif
     for (int n = 0; n < (int) nbParts; n++) {
-      processNlBayes(imNoisySub[n], imBasicSub[n], imFinalSub[n], imSizeSub, paramStep2);
+      processNlBayes(imNoisySub[n],
+                     imBasicSub[n],
+                     imFinalSub[n],
+                     imSizeSub,
+                     paramStep2);
     }
 
     //! Get the final result
@@ -243,13 +287,11 @@ int runNlBayes(std::vector<float> const &i_imNoisy,
  *
  * @return none.
  **/
-void processNlBayes(
-    std::vector<float> const &i_imNoisy,
-    std::vector<float> &io_imBasic,
-    std::vector<float> &o_imFinal,
-    const ImageSize &p_imSize,
-    nlbParams &p_params
-) {
+void processNlBayes(std::vector<float> const &i_imNoisy,
+                    std::vector<float> &io_imBasic,
+                    std::vector<float> &o_imFinal,
+                    const ImageSize &p_imSize,
+                    nlbParams &p_params) {
   //! Parameters initialization
   const unsigned sW = p_params.sizeSearchWindow;
   const unsigned sP = p_params.sizePatch;
@@ -273,7 +315,7 @@ void processNlBayes(
   matParams mat;
   mat.group3dTranspose.resize(p_params.isFirstStep ? nSP * sP2 : sW * sW * sPC);
   mat.tmpMat.resize(p_params.isFirstStep ? sP2 * sP2 : sPC * sPC);
-  mat.baricenter.resize(p_params.isFirstStep ? sP2 : sPC);
+  mat.barycenter.resize(p_params.isFirstStep ? sP2 : sPC);
   mat.covMat.resize(p_params.isFirstStep ? sP2 * sP2 : sPC * sPC);
   mat.covMatTmp.resize(p_params.isFirstStep ? sP2 * sP2 : sPC * sPC);
 
@@ -299,8 +341,7 @@ void processNlBayes(
         estimateSimilarPatchesStep1(i_imNoisy, group3d, index, ij, p_imSize, p_params);
       }
       else {
-        nSimP = estimateSimilarPatchesStep2(i_imNoisy, io_imBasic, group3dNoisy,
-                                            group3dBasic, index, ij, p_imSize, p_params);
+        nSimP = estimateSimilarPatchesStep2(i_imNoisy, io_imBasic, group3dNoisy, group3dBasic, index, ij, p_imSize, p_params);
       }
 
       //! Initialization
@@ -309,12 +350,10 @@ void processNlBayes(
       //! If we use the homogeneous area trick
       if (p_params.useHomogeneousArea) {
         if (p_params.isFirstStep) {
-          doBayesEstimate = !computeHomogeneousAreaStep1(group3d, sP, nSP,
-                                                         threshold, p_imSize);
+          doBayesEstimate = !computeHomogeneousAreaStep1(group3d, sP, nSP, threshold, p_imSize);
         }
         else {
-          doBayesEstimate = !computeHomogeneousAreaStep2(group3dNoisy, group3dBasic,
-                                                         sP, nSimP, threshold, p_imSize);
+          doBayesEstimate = !computeHomogeneousAreaStep2(group3dNoisy, group3dBasic, sP, nSimP, threshold, p_imSize);
         }
       }
 
@@ -324,8 +363,7 @@ void processNlBayes(
           computeBayesEstimateStep1(group3d, mat, nInverseFailed, p_params);
         }
         else {
-          computeBayesEstimateStep2(group3dNoisy, group3dBasic, mat, nInverseFailed,
-                                    p_imSize, p_params, nSimP);
+          computeBayesEstimateStep2(group3dNoisy, group3dBasic, mat, nInverseFailed, p_imSize, p_params, nSimP);
         }
       }
 
@@ -613,7 +651,7 @@ int computeHomogeneousAreaStep2(
  * @param io_group3d: contains all similar patches. Will contain estimates for all similar patches;
  * @param i_mat: contains :
  *		- group3dTranspose: allocated memory. Used to contain the transpose of io_group3dNoisy;
- *		- baricenter: allocated memory. Used to contain the baricenter of io_group3dBasic;
+ *		- barycenter: allocated memory. Used to contain the barycenter of io_group3dBasic;
  *		- covMat: allocated memory. Used to contain the covariance matrix of the 3D group;
  *		- covMatTmp: allocated memory. Used to process the Bayes estimate;
  *		- tmpMat: allocated memory. Used to process the Bayes estimate;
@@ -622,12 +660,10 @@ int computeHomogeneousAreaStep2(
  *
  * @return none.
  **/
-void computeBayesEstimateStep1(
-    std::vector<std::vector<float> > &io_group3d,
-    matParams &i_mat,
-    unsigned &io_nInverseFailed,
-    nlbParams &p_params
-) {
+void computeBayesEstimateStep1(std::vector<std::vector<float> > &io_group3d,
+                               matParams &i_mat,
+                               unsigned &io_nInverseFailed,
+                               nlbParams &p_params) {
   //! Parameters
   const unsigned chnls = io_group3d.size();
   const unsigned nSimP = p_params.nSimilarPatches;
@@ -637,14 +673,17 @@ void computeBayesEstimateStep1(
   //! Bayes estimate
   for (unsigned c = 0; c < chnls; c++) {
 
-    //! Center data around the baricenter
-    centerData(io_group3d[c], i_mat.baricenter, nSimP, sP2);
+    //! Center data around the barycenter
+    centerData(io_group3d[c], i_mat.barycenter, nSimP, sP2);
 
     //! Compute the covariance matrix of the set of similar patches
     covarianceMatrix(io_group3d[c], i_mat.covMat, nSimP, sP2);
 
     //! Bayes' Filtering
     if (inverseMatrix(i_mat.covMat, sP2) == EXIT_SUCCESS) {
+      if (p_params.custom_noise) {
+        productMatrix(i_mat.covMat, p_params.noise_model, i_mat.covMat, sP2, sP2, sP2);
+      }
       productMatrix(i_mat.group3dTranspose, i_mat.covMat, io_group3d[c], sP2, sP2, nSimP);
       for (unsigned k = 0; k < sP2 * nSimP; k++) {
         io_group3d[c][k] -= valDiag * i_mat.group3dTranspose[k];
@@ -653,10 +692,10 @@ void computeBayesEstimateStep1(
       io_nInverseFailed++;
     }
 
-    //! Add baricenter
+    //! Add barycenter
     for (unsigned j = 0, k = 0; j < sP2; j++) {
       for (unsigned i = 0; i < nSimP; i++, k++) {
-        io_group3d[c][k] += i_mat.baricenter[j];
+        io_group3d[c][k] += i_mat.barycenter[j];
       }
     }
   }
@@ -670,7 +709,7 @@ void computeBayesEstimateStep1(
  *			for all similar patches;
  * @param i_mat: contains :
  *		- group3dTranspose: allocated memory. Used to contain the transpose of io_group3dNoisy;
- *		- baricenter: allocated memory. Used to contain the baricenter of io_group3dBasic;
+ *		- barycenter: allocated memory. Used to contain the barycenter of io_group3dBasic;
  *		- covMat: allocated memory. Used to contain the covariance matrix of the 3D group;
  *		- covMatTmp: allocated memory. Used to process the Bayes estimate;
  *		- tmpMat: allocated memory. Used to process the Bayes estimate;
@@ -681,33 +720,42 @@ void computeBayesEstimateStep1(
  *
  * @return none.
  **/
-void computeBayesEstimateStep2(
-    std::vector<float> &i_group3dNoisy,
-    std::vector<float> &io_group3dBasic,
-    matParams &i_mat,
-    unsigned &io_nInverseFailed,
-    const ImageSize &p_imSize,
-    nlbParams p_params,
-    const unsigned p_nSimP
-) {
+void computeBayesEstimateStep2(std::vector<float> &i_group3dNoisy,
+                               std::vector<float> &io_group3dBasic,
+                               matParams &i_mat,
+                               unsigned &io_nInverseFailed,
+                               const ImageSize &p_imSize,
+                               nlbParams p_params,
+                               const unsigned p_nSimP) {
   //! Parameters initialization
   const float diagVal = p_params.beta * p_params.sigma * p_params.sigma;
   const unsigned sPC = p_params.sizePatch * p_params.sizePatch * p_imSize.nChannels;
 
-  //! Center 3D groups around their baricenter
-  centerData(io_group3dBasic, i_mat.baricenter, p_nSimP, sPC);
-  centerData(i_group3dNoisy, i_mat.baricenter, p_nSimP, sPC);
+  //! Center 3D groups around their barycenter
+  centerData(io_group3dBasic, i_mat.barycenter, p_nSimP, sPC);
+  centerData(i_group3dNoisy, i_mat.barycenter, p_nSimP, sPC, NOISY_BARYCENTER() != 0);
 
   //! Compute the covariance matrix of the set of similar patches
   covarianceMatrix(io_group3dBasic, i_mat.covMat, p_nSimP, sPC);
 
   //! Bayes' Filtering
-  for (unsigned k = 0; k < sPC; k++) {
-    i_mat.covMat[k * sPC + k] += diagVal;
+  if (p_params.custom_noise) {
+    for (unsigned i = 0; i < sPC; i++) {
+      for (unsigned j = 0; j < sPC; ++j) {
+        i_mat.covMat[i * sPC + j] += diagVal * p_params.noise_model[i * sPC + j];
+      }
+    }
+  } else {
+    for (unsigned k = 0; k < sPC; k++) {
+      i_mat.covMat[k * sPC + k] += diagVal;
+    }
   }
 
   //! Compute the estimate
   if (inverseMatrix(i_mat.covMat, sPC) == EXIT_SUCCESS) {
+    if (p_params.custom_noise) {
+      productMatrix(i_mat.covMat, p_params.noise_model, i_mat.covMat, sPC, sPC, sPC);
+    }
     productMatrix(io_group3dBasic, i_mat.covMat, i_group3dNoisy, sPC, sPC, p_nSimP);
     for (unsigned k = 0; k < sPC * p_nSimP; k++) {
       io_group3dBasic[k] = i_group3dNoisy[k] - diagVal * io_group3dBasic[k];
@@ -717,10 +765,10 @@ void computeBayesEstimateStep2(
     io_nInverseFailed++;
   }
 
-  //! Add baricenter
+  //! Add barycenter
   for (unsigned j = 0, k = 0; j < sPC; j++) {
     for (unsigned i = 0; i < p_nSimP; i++, k++) {
-      io_group3dBasic[k] += i_mat.baricenter[j];
+      io_group3dBasic[k] += i_mat.barycenter[j];
     }
   }
 }

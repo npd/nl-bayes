@@ -46,21 +46,23 @@ const char *pick_option(int *c, char **v, const char *o, const char *d) {
  **/
 
 int main(int argc, char **argv) {
-  //! Check if there is the right call for the algorithm
-  if (argc < 4) {
-    cerr << "usage: " << argv[0] << " input sigma output [-v] [-1 | -2 guide] [-flat1 {0|1} (default 1)] [-flat2 {0|1} (default 0)]" << endl;
-    return EXIT_FAILURE;
-  }
-
   //! Variables initialization
-  const float sigma = atof(argv[2]);
   const bool verbose = pick_option(&argc, argv, "v", NULL) != NULL;
   const bool no_second_step = pick_option(&argc, argv, "1", NULL) != NULL;
   const char *second_step_guide = pick_option(&argc, argv, "2", "");
   const bool no_first_step = second_step_guide[0] != '\0';
   const bool flat1 = pick_option(&argc, argv, "flat1", "1")[0] == '1';
   const bool flat2 = pick_option(&argc, argv, "flat2", "0")[0] == '1';
+  const char *noise_cov_matrix = pick_option(&argc, argv, "c", "");
+  const bool custom_noise = noise_cov_matrix[0] != '\0';
 
+  //! Check if there is the right call for the algorithm
+  if (argc < 4) {
+    cerr << "usage: " << argv[0] << " input sigma output [-v] [-1 | -2 guide] [-flat1 {0|1} (default 1)] [-flat2 {0|1} (default 0)] [-c noise_cov_matrix]" << endl;
+    return EXIT_FAILURE;
+  }
+
+  const float sigma = atof(argv[2]);
 
   if (no_second_step && no_first_step) {
     cerr << "You can't use -1 and -2 together." << endl;
@@ -68,9 +70,15 @@ int main(int argc, char **argv) {
   }
 
   //! Declarations
-  vector<float> imNoisy, imBasic, imFinal;
-  ImageSize imSize;
+  vector<float> imNoisy, imBasic, imFinal, noise_model;
+  ImageSize imSize, noise_modelSize;
 
+  //! Eventually load noise model
+  if (custom_noise) {
+    if (loadImage(noise_cov_matrix, noise_model, noise_modelSize, verbose) != EXIT_SUCCESS) {
+      return EXIT_FAILURE;
+    }
+  }
   //! Load image
   if (loadImage(argv[1], imNoisy, imSize, verbose) != EXIT_SUCCESS) {
     return EXIT_FAILURE;
@@ -93,7 +101,19 @@ int main(int argc, char **argv) {
   if (verbose) {
     cerr << endl << "Applying NL-Bayes to the noisy image :" << endl;
   }
-  if (runNlBayes(imNoisy, imBasic, imFinal, imSize, sigma, verbose, no_first_step, no_second_step, flat1, flat2)
+  if (runNlBayes(imNoisy,
+                 imBasic,
+                 imFinal,
+                 imSize,
+                 sigma,
+                 verbose,
+                 no_first_step,
+                 no_second_step,
+                 flat1,
+                 flat2,
+                 custom_noise,
+                 noise_model,
+                 noise_modelSize)
       != EXIT_SUCCESS) {
     return EXIT_FAILURE;
   }

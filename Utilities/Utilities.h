@@ -38,20 +38,19 @@ float clip(
 );
 
 /**
- * @brief Obtain and substract the baricenter of io_group3d.
+ * @brief Obtain and substract the barycenter of io_group3d.
  *
  * @param io_group3d(p_rows x p_cols) : data to center;
- * @param o_baricenter(p_cols): will contain the baricenter of io_group3d;
+ * @param o_baricenter(p_cols): will contain the barycenter of io_group3d;
  * @param p_rows, p_cols: size of io_group3d.
  *
  * @return none.
  **/
-void centerData(
-	std::vector<float> &io_group3d
-,	std::vector<float> &o_baricenter
-,	const unsigned p_rows
-,	const unsigned p_cols
-);
+void centerData(std::vector<float> &io_group3d,
+                std::vector<float> &o_barycenter,
+                const unsigned p_rows,
+                const unsigned p_cols,
+                const bool compute_barycenter = true);
 
 /**
  * @brief Compute the average standard deviation of a set of patches.

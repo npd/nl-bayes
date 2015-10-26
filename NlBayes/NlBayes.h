@@ -49,20 +49,22 @@ struct nlbParams {
   bool isFirstStep;
   bool doPasteBoost;
   bool verbose;
+  bool custom_noise;
+  std::vector<float> noise_model;
 };
 
 /**
  * @brief Structure containing usefull matrices for the Bayes estimations.
  *
  * @param group3dTranspose: allocated memory. Used to contain the transpose of io_group3dNoisy;
- * @param baricenter: allocated memory. Used to contain the baricenter of io_group3dBasic;
+ * @param barycenter: allocated memory. Used to contain the barycenter of io_group3dBasic;
  * @param covMat: allocated memory. Used to contain the covariance matrix of the 3D group;
  * @param covMatTmp: allocated memory. Used to process the Bayes estimate;
  * @param tmpMat: allocated memory. Used to process the Bayes estimate.
  **/
 struct matParams {
   std::vector<float> group3dTranspose;
-  std::vector<float> baricenter;
+  std::vector<float> barycenter;
   std::vector<float> covMat;
   std::vector<float> covMatTmp;
   std::vector<float> tmpMat;
@@ -83,11 +85,14 @@ struct matParams {
  **/
 void initializeNlbParameters(nlbParams &o_paramStep1,
                              nlbParams &o_paramStep2,
-                             const float p_sigma,
                              const ImageSize &p_imSize,
+                             const float p_sigma,
+                             const bool p_verbose,
                              const bool flat1,
                              const bool flat2,
-                             const bool p_verbose);
+                             const bool custom_noise,
+                             const std::vector<float> &noise_model,
+                             const ImageSize &noise_model_size);
 
 /**
  * @brief Main function to process the whole NL-Bayes algorithm.
@@ -112,7 +117,10 @@ int runNlBayes(std::vector<float> const &i_imNoisy,
                const bool no_first_step,
                const bool no_second_step,
                const bool flat1,
-               const bool flat2);
+               const bool flat2,
+               const bool custom_noise,
+               const std::vector<float> &noise_model,
+               const ImageSize &noise_model_size);
 
 /**
  * @brief Generic step of the NL-Bayes denoising (could be the first or the second).
@@ -228,7 +236,7 @@ int computeHomogeneousAreaStep2(std::vector<float> const &i_group3dNoisy,
  * @param io_group3d: contains all similar patches. Will contain estimates for all similar patches;
  * @param i_mat: contains :
  *		- group3dTranspose: allocated memory. Used to contain the transpose of io_group3dNoisy;
- *		- baricenter: allocated memory. Used to contain the baricenter of io_group3dBasic;
+ *		- barycenter: allocated memory. Used to contain the barycenter of io_group3dBasic;
  *		- covMat: allocated memory. Used to contain the covariance matrix of the 3D group;
  *		- covMatTmp: allocated memory. Used to process the Bayes estimate;
  *		- tmpMat: allocated memory. Used to process the Bayes estimate;
@@ -250,7 +258,7 @@ void computeBayesEstimateStep1(std::vector<std::vector<float> > &io_group3d,
  *			for all similar patches;
  * @param i_mat: contains :
  *		- group3dTranspose: allocated memory. Used to contain the transpose of io_group3dNoisy;
- *		- baricenter: allocated memory. Used to contain the baricenter of io_group3dBasic;
+ *		- barycenter: allocated memory. Used to contain the barycenter of io_group3dBasic;
  *		- covMat: allocated memory. Used to contain the covariance matrix of the 3D group;
  *		- covMatTmp: allocated memory. Used to process the Bayes estimate;
  *		- tmpMat: allocated memory. Used to process the Bayes estimate;
@@ -261,15 +269,13 @@ void computeBayesEstimateStep1(std::vector<std::vector<float> > &io_group3d,
  *
  * @return none.
  **/
-void computeBayesEstimateStep2(
-    std::vector<float> &i_group3dNoisy,
-    std::vector<float> &io_group3dBasic,
-    matParams &i_mat,
-    unsigned &io_nInverseFailed,
-    const ImageSize &p_imSize,
-    nlbParams p_params,
-    const unsigned p_nSimP
-);
+void computeBayesEstimateStep2(std::vector<float> &i_group3dNoisy,
+                               std::vector<float> &io_group3dBasic,
+                               matParams &i_mat,
+                               unsigned &io_nInverseFailed,
+                               const ImageSize &p_imSize,
+                               nlbParams p_params,
+                               const unsigned p_nSimP);
 
 /**
  * @brief Aggregate estimates of all similar patches contained in the 3D group.
