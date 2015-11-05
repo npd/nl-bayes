@@ -38,10 +38,16 @@ include_directories (PUBLIC ${EIGEN3_INCLUDE_DIR} PUBLIC ${TIFF_INCLUDE_DIR} PUB
 link_libraries (${TIFF_LIBRARIES} ${JPEG_LIBRARIES} ${PNG_LIBRARIES})
 
 set(SOURCE_FILES
+    NlBayes/LibMatrix.h
     NlBayes/LibMatrix.cpp
+    NlBayes/NlBayes.h
     NlBayes/NlBayes.cpp
+    NlBayes/smapa.h
+    Utilities/iio.h
     Utilities/iio.c
+    Utilities/LibImages.h
     Utilities/LibImages.cpp
+    Utilities/Utilities.h
     Utilities/Utilities.cpp
     main.cpp)
 
