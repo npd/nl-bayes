@@ -30,6 +30,7 @@
 #endif
 
 SMART_PARAMETER_SILENT(NOISY_BARYCENTER, 0);
+SMART_PARAMETER_SILENT(NOISY_COVARIANCE, 0);
 
 using namespace std;
 
@@ -732,8 +733,13 @@ void computeBayesEstimateStep2(std::vector<float> &i_group3dNoisy,
   const unsigned sPC = p_params.sizePatch * p_params.sizePatch * p_imSize.nChannels;
 
   //! Center 3D groups around their barycenter
-  centerData(io_group3dBasic, i_mat.barycenter, p_nSimP, sPC);
-  centerData(i_group3dNoisy, i_mat.barycenter, p_nSimP, sPC, NOISY_BARYCENTER() != 0);
+  if (NOISY_COVARIANCE() != 0) {
+    centerData(i_group3dNoisy, i_mat.barycenter, p_nSimP, sPC);
+    centerData(io_group3dBasic, i_mat.barycenter, p_nSimP, sPC, false);
+  } else {
+    centerData(io_group3dBasic, i_mat.barycenter, p_nSimP, sPC);
+    centerData(i_group3dNoisy, i_mat.barycenter, p_nSimP, sPC, NOISY_BARYCENTER() != 0);
+  }
 
   //! Compute the covariance matrix of the set of similar patches
   covarianceMatrix(io_group3dBasic, i_mat.covMat, p_nSimP, sPC);
