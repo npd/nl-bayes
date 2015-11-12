@@ -32,6 +32,16 @@
 SMART_PARAMETER_INT(NOISY_BARYCENTER, 0);
 SMART_PARAMETER_INT(NOISY_COVARIANCE, 0);
 
+SMART_PARAMETER_INT(STEP1_SIZE, 5);
+SMART_PARAMETER_INT(STEP2_SIZE, 3);
+SMART_PARAMETER_INT(STEP1_SEARCHWIN, 7 * STEP1_SIZE());
+SMART_PARAMETER_INT(STEP2_SEARCHWIN, 7 * STEP2_SIZE());
+SMART_PARAMETER_INT(STEP1_NSIM, 15 * (STEP1_SIZE() - 1));
+SMART_PARAMETER_INT(STEP2_NSIM, 15 * (STEP2_SIZE() - 1));
+SMART_PARAMETER_FLOAT(STEP1_FLAT_THRESHOLD, 1.05f);
+SMART_PARAMETER_FLOAT(STEP2_FLAT_THRESHOLD, 1.05f);
+SMART_PARAMETER_FLOAT(STEP2_TAU0, 4.f);
+
 using namespace std;
 
 /**
@@ -61,15 +71,15 @@ void initializeNlbParameters(nlbParams &o_paramStep1,
   o_paramStep1.sigma = p_sigma;
   o_paramStep2.sigma = p_sigma;
 
-  o_paramStep1.sizePatch = 5;
-  o_paramStep2.sizePatch = 3;
+  o_paramStep1.sizePatch = STEP1_SIZE();
+  o_paramStep2.sizePatch = STEP2_SIZE();
 
   //! Size of the search window around the reference patch (must be odd)
-  o_paramStep1.sizeSearchWindow = 7 * o_paramStep1.sizePatch;
-  o_paramStep2.sizeSearchWindow = 7 * o_paramStep2.sizePatch;
+  o_paramStep1.sizeSearchWindow = STEP1_SEARCHWIN();
+  o_paramStep2.sizeSearchWindow = STEP2_SEARCHWIN();
 
-  o_paramStep1.nSimilarPatches = 15 * (o_paramStep1.sizePatch - 1);
-  o_paramStep2.nSimilarPatches = 15 * (o_paramStep2.sizePatch - 1);
+  o_paramStep1.nSimilarPatches = STEP1_NSIM();
+  o_paramStep2.nSimilarPatches = STEP2_NSIM();
 
   //! Offset: step between two similar patches
   o_paramStep1.offSet = o_paramStep1.sizePatch / 2;
@@ -84,15 +94,15 @@ void initializeNlbParameters(nlbParams &o_paramStep1,
   o_paramStep2.boundary = (unsigned int) (1.5f * float(o_paramStep2.sizeSearchWindow));
 
   //! Parameter used to determine if an area is homogeneous
-  o_paramStep1.gamma = 1.05f;
-  o_paramStep2.gamma = 1.05f;
+  o_paramStep1.gamma = STEP1_FLAT_THRESHOLD();
+  o_paramStep2.gamma = STEP2_FLAT_THRESHOLD();
 
   //! Parameter used to estimate the covariance matrix
   o_paramStep1.beta = 1.f;
   o_paramStep2.beta = 1.f;
 
   //! Parameter used to determine similar patches
-  o_paramStep2.tau = 16.f * o_paramStep2.sizePatch * o_paramStep2.sizePatch * p_imSize.nChannels;
+  o_paramStep2.tau = STEP2_TAU0() * o_paramStep2.sizePatch * o_paramStep2.sizePatch * p_imSize.nChannels;
 
   //! Print information?
   o_paramStep1.verbose = p_verbose;
