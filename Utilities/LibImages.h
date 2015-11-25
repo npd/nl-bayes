@@ -110,13 +110,11 @@ int removeBoundary(
  *
  * @return none.
  **/
-void symetrizeImage(
-    std::vector<float> const &i_im1,
-    std::vector<float> &o_im2,
-    const ImageSize p_imSize,
-    const unsigned p_borderSize,
-    const bool p_isForward
-);
+void symmetrizeImage(std::vector<float> const &i_im1,
+                     std::vector<float> &o_im2,
+                     const ImageSize p_imSize,
+                     const unsigned p_borderSize,
+                     const bool p_isForward);
 
 /**
  * @brief Transform the color space of an image, from RGB to YUV, or vice-versa.

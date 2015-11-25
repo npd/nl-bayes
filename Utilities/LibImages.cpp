@@ -124,10 +124,10 @@ int saveImage(
 }
 
 /**
- * @brief Add boundary by symetry.
+ * @brief Add boundary by symmetry.
  *
- * @param i_im : image to symetrize;
- * @param o_imSym : will contain i_img with symetrized boundaries;
+ * @param i_im : image to symmetrize;
+ * @param o_imSym : will contain i_img with symmetrized boundaries;
  * @param p_imSize : size of i_im;
  * @param p_imSizeSym : size of o_imSym.
  *
@@ -243,13 +243,11 @@ int removeBoundary(
  *
  * @return none.
  **/
-void symetrizeImage(
-    std::vector<float> const &i_im1,
-    std::vector<float> &o_im2,
-    const ImageSize p_imSize,
-    const unsigned p_borderSize,
-    const bool p_isForward
-) {
+void symmetrizeImage(std::vector<float> const &i_im1,
+                     std::vector<float> &o_im2,
+                     const ImageSize p_imSize,
+                     const unsigned p_borderSize,
+                     const bool p_isForward) {
   //! Declaration
   unsigned w1, h1, w2, h2;
   if (p_isForward) {
@@ -470,7 +468,7 @@ int subDivide(std::vector<float> const &i_im,
   imSizeSym.nChannels = p_imSize.nChannels;
   imSizeSym.wh = imSizeSym.width * imSizeSym.height;
   imSizeSym.whc = imSizeSym.wh * imSizeSym.nChannels;
-  symetrizeImage(imTmp, imSymTmp, imSizeTmp, p_N, true);
+  symmetrizeImage(imTmp, imSymTmp, imSizeTmp, p_N, true);
 
   //! Obtain sub-images
   o_imSizeSub.width = wTmp + 2 * p_N;
