@@ -66,7 +66,7 @@ int loadImage(const char *p_name,
     while (k < w * h && imTmp[k] == imTmp[w * h + k] && imTmp[k] == imTmp[2 * w * h + k]) {
       k++;
     }
-    c = (k == w * h ? 1 : 3);
+    c = (k == w * h ? 1 : c);
   }
 
   //! Some image informations
