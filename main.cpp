@@ -126,11 +126,11 @@ int main(int argc, char **argv) {
     cerr << "Save image...";
   }
   if (no_second_step) {
-    if (saveImage(argv[3], imBasic, imSize, 0.f, 255.f) != EXIT_SUCCESS) {
+    if (saveImage(argv[3], imBasic, imSize) != EXIT_SUCCESS) {
       return EXIT_FAILURE;
     }
   } else {
-    if (saveImage(argv[3], imFinal, imSize, 0.f, 255.f) != EXIT_SUCCESS) {
+    if (saveImage(argv[3], imFinal, imSize) != EXIT_SUCCESS) {
       return EXIT_FAILURE;
     }
   }

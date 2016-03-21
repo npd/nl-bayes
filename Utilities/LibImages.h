@@ -57,13 +57,8 @@ int loadImage(
  *
  * @return EXIT_SUCCESS if the image has been saved, EXIT_FAILURE otherwise
  **/
-int saveImage(
-    char *p_name,
-    std::vector<float> const &i_im,
-    const ImageSize &p_imSize,
-    const float p_min,
-    const float p_max
-);
+int saveImage
+    (char *p_name, std::vector<float> const &i_im, const ImageSize &p_imSize);
 
 /**
  * @brief Add boundary by symetry.
