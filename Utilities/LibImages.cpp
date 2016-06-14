@@ -105,9 +105,9 @@ int saveImage(char *p_name, std::vector<float> const &i_im, const ImageSize &p_i
   float *imTmp = new float[p_imSize.whc];
 
   //! Check for boundary problems
-//  for (unsigned k = 0; k < p_imSize.whc; k++) {
-//    imTmp[k] = clip(i_im[k], p_min, p_max);
-//  }
+  for (unsigned k = 0; k < p_imSize.whc; k++) {
+    imTmp[k] = i_im[k];
+  }
 
   iio_save_image_float_split(p_name, imTmp, p_imSize.width, p_imSize.height, p_imSize.nChannels);
 
