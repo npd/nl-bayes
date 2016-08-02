@@ -62,7 +62,7 @@ class BasicImage {
 };
 
 typedef BasicImage<float> Image;
-typedef BasicImage<bool> BoolMask;
+typedef BasicImage<char> BoolMask;
 
 template <typename T>
 inline BasicImage<T>::BasicImage(int rows, int columns, int channels, T val)

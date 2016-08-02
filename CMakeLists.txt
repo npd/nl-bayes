@@ -48,6 +48,13 @@ find_package (PNG REQUIRED)
 include_directories (SYSTEM ${TIFF_INCLUDE_DIR} ${JPEG_INCLUDE_DIR} ${PNG_INCLUDE_DIRS})
 link_libraries (${TIFF_LIBRARIES} ${JPEG_LIBRARIES} ${PNG_LIBRARIES})
 
+# Enable Eigen
+find_path (EIGEN3_INCLUDE_DIR NAMES signature_of_eigen3_matrix_library PATH_SUFFIXES eigen3 eigen)
+include_directories (SYSTEM ${EIGEN3_INCLUDE_DIR})
+if (NOT EIGEN3_INCLUDE_DIR)
+  message (FATAL_ERROR "Eigen3 not found.")
+endif ()
+
 set(SOURCE_FILES
     main.cpp
     NLBayes.cpp
